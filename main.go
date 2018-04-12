@@ -17,6 +17,9 @@
 
 //https://www.socketloop.com/tutorials/golang-tutorial-on-loading-gob-and-pem-files
 
+//https://gist.github.com/Soarez/9688998
+//https://support.ssl.com/Knowledgebase/Article/View/19/0/der-vs-crt-vs-cer-vs-pem-certificates-and-how-to-convert-them
+
 package main
 
 import (
@@ -40,10 +43,11 @@ func main() {
 	// testdsa()
 	// testonlyRSA()
 	testRSA()
+	// gen_from_file()
 }
 
 func testDes() {
-	plaintext := []byte("wada raha sanam des desc")
+	plaintext := []byte("This is my very secret code")
 	key := []byte("12345678")
 	block, err := des.NewCipher(key)
 	if err != nil {
@@ -75,7 +79,7 @@ func testDes() {
 }
 
 func testAes() {
-	plaintext := []byte("wada raha sanam Aes")
+	plaintext := []byte("very very secret Aes")
 	// echo "Vimlesh" | sha256sum
 	key, err := hex.DecodeString("909f5f575649391ca627ea2dfcbbbc15da3369d8fc102b360c8204c244e09c15")
 	// key, err := hex.DecodeString("6368616e676520746869732070617373776f726420746f206120736563726574")
@@ -121,7 +125,7 @@ func testAes() {
 }
 
 func testAesStream() {
-	plaintext := []byte("wada raha sanam AES stream")
+	plaintext := []byte("very very secret AES stream")
 	// echo "Vimlesh" | sha256sum
 	key, err := hex.DecodeString("909f5f575649391ca627ea2dfcbbbc15da3369d8fc102b360c8204c244e09c15")
 	if err != nil {

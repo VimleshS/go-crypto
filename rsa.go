@@ -13,12 +13,18 @@ import (
 //https://stackoverflow.com/questions/11410770/load-rsa-public-key-from-file?rq=1
 /*
 	1. openssl genrsa -out private_key.pem 2048
+
+	NOT REQUIRED
 	2. openssl pkcs8 -topk8 -inform PEM -outform DER -in private_key.pem -out private_key.der -nocrypt
+
 	3. openssl rsa -in private_key.pem -pubout -outform DER -out public_key.der
+	OR
+	4. openssl rsa -in private_key.pem -pubout -outform PEM -out public_key.pem
 */
 
 func testRSA() {
-	encrypteddata := readpublickey()
+	// encrypteddata := readpublickey()
+	encrypteddata := readpempublickey()
 	decryptData(encrypteddata)
 }
 
@@ -28,6 +34,41 @@ func readpublickey() []byte {
 		fmt.Println(e.Error())
 	}
 	k, err := x509.ParsePKIXPublicKey(b)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	//to check what is key type
+	/*
+		switch k := k.(type) {
+		case *rsa.PublicKey:
+			fmt.Println("pub is of type RSA:", k)
+		case *dsa.PublicKey:
+			fmt.Println("pub is of type DSA:", k)
+		case *ecdsa.PublicKey:
+			fmt.Println("pub is of type ECDSA:", k)
+		default:
+			panic("unknown type of public key")
+		}
+	*/
+
+	hash := sha1.New()
+	random := rand.Reader
+	encrypted, err := rsa.EncryptOAEP(hash, random, k.(*rsa.PublicKey), []byte("My very secret to be preserved"), nil)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return encrypted
+}
+
+func readpempublickey() []byte {
+	fmt.Println("using PEM")
+	b, e := ioutil.ReadFile("./public_key.pem")
+	if e != nil {
+		fmt.Println(e.Error())
+	}
+	block, _ := pem.Decode(b)
+	k, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -76,4 +117,18 @@ func decryptData(cipherbytes []byte) {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(string(decrypted))
+}
+
+func gen_from_file() {
+	b, e := ioutil.ReadFile("./private_key.pem")
+	if e != nil {
+		fmt.Println(e.Error())
+	}
+	block, _ := pem.Decode(b)
+
+	var cert *x509.Certificate
+	cert, _ = x509.ParseCertificate(block.Bytes)
+	rsaPublicKey := cert.PublicKey.(*rsa.PublicKey)
+	fmt.Println(rsaPublicKey.N)
+	fmt.Println(rsaPublicKey.E)
 }
