@@ -34,17 +34,66 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
+
+	vaes "github.com/VimleshS/crypto/aes"
+	vdes "github.com/VimleshS/crypto/des"
 )
 
 func main() {
-	// testAes()
-	// testAesStream()
+
+	a1 := vaes.NewAesStream("This is my new text")
+	cp1, err := a1.Encrypt()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	v1, _ := a1.Decrypt(cp1)
+	fmt.Println(v1)
+
+	a := vaes.NewAesCBC("This is my")
+	cp, err := a.Encrypt()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	v1, _ = a.Decrypt(cp)
+	fmt.Println(v1)
+
+	ae := vaes.NewAesStream("woh im greatmnvhsahg 123456")
+	ct, _ := ae.Encrypt()
+	v, _ := ae.Decrypt(ct)
+	fmt.Println(v)
+
+	_des := vdes.NewDesCBC("你好")
+	ct, _ = _des.Encrypt()
+	s, _ := _des.Decrypt(ct)
+	fmt.Println(s)
+
 	// testDes()
 	// testdsa()
 	// testonlyRSA()
-	testRSA()
+	//testRSA()
 	// gen_from_file()
 }
+
+/*
+func pkcS5Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
+}
+
+func removePKCSPadding(_dst []byte) []byte {
+	dummy := []byte{}
+	for _, char := range _dst {
+		if char < 16 {
+			continue
+		}
+		dummy = append(dummy, char)
+	}
+	log.Println(string(dummy))
+	return dummy
+}
+*/
 
 func testDes() {
 	plaintext := []byte("This is my very secret code")
@@ -68,7 +117,7 @@ func testDes() {
 	//ENCODING
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[des.BlockSize:], plaintext)
-	fmt.Printf("%x\n", ciphertext)
+	// fmt.Printf("%x\n", ciphertext)
 
 	// DECODING
 	iv1 := ciphertext[:des.BlockSize]
