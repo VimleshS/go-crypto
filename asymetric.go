@@ -28,11 +28,11 @@ func testdsa() {
 	var pubkey dsa.PublicKey
 	pubkey = privatekey.PublicKey
 
-	fmt.Println("Private Key :")
-	fmt.Printf("%x \n", privatekey)
+	// fmt.Println("Private Key :")
+	// fmt.Printf("%x \n", privatekey)
 
-	fmt.Println("Public Key :")
-	fmt.Printf("%x \n", pubkey)
+	// fmt.Println("Public Key :")
+	// fmt.Printf("%x \n", pubkey)
 
 	// Sign
 	var h hash.Hash
@@ -51,7 +51,7 @@ func testdsa() {
 	signature := r.Bytes()
 	signature = append(signature, s.Bytes()...)
 
-	fmt.Printf("Signature : %x\n", signature)
+	// fmt.Printf("Signature : %x\n", signature)
 
 	// Verify
 	verifystatus := dsa.Verify(&pubkey, signhash, r, s)

@@ -54,21 +54,21 @@ func (kb *KeyBlock) InitializationVector(ciphertext []byte) ([]byte, error) {
 	return iv, nil
 }
 
-// Aesstream ...
-type aesStream struct {
+// streamHelper ...
+type streamHelper struct {
 	EsInterfacer
 	Text string
 }
 
-// NewAesStream ...
-func NewAesStream(text string) *aesStream {
-	return &aesStream{EsInterfacer: &KeyBlock{
+// NewstreamHelper ...
+func NewstreamHelper(text string) *streamHelper {
+	return &streamHelper{EsInterfacer: &KeyBlock{
 		NewCipher: aes.NewCipher, BlockSize: aes.BlockSize},
 		Text: text}
 }
 
 // Encrypt ...
-func (a *aesStream) Encrypt() ([]byte, error) {
+func (a *streamHelper) Encrypt() ([]byte, error) {
 	paddedSrcBytes := []byte(a.Text)
 
 	block, err := a.GetBlock(a.KeyBytes)
@@ -88,7 +88,7 @@ func (a *aesStream) Encrypt() ([]byte, error) {
 }
 
 // Decrypt ...
-func (a *aesStream) Decrypt(ciphertext []byte) (string, error) {
+func (a *streamHelper) Decrypt(ciphertext []byte) (string, error) {
 	block, err := a.GetBlock(a.KeyBytes)
 	if err != nil {
 		return "", err
@@ -105,18 +105,18 @@ func (a *aesStream) Decrypt(ciphertext []byte) (string, error) {
 	return string(_dst[a.Size():]), nil
 }
 
-type aesCBC struct {
+type helper struct {
 	EsInterfacer
 	Text string
 }
 
-func NewAesCBC(text string) *aesCBC {
-	return &aesCBC{EsInterfacer: &KeyBlock{
+func Newhelper(text string) *helper {
+	return &helper{EsInterfacer: &KeyBlock{
 		NewCipher: aes.NewCipher, BlockSize: aes.BlockSize}, Text: text}
 }
 
 // Encrypt ...
-func (a *aesCBC) Encrypt() ([]byte, error) {
+func (a *helper) Encrypt() ([]byte, error) {
 	paddedSrcBytes := []byte(a.Text)
 
 	block, err := a.GetBlock(a.KeyBytes)
@@ -138,7 +138,7 @@ func (a *aesCBC) Encrypt() ([]byte, error) {
 }
 
 // Decrypt ...
-func (a *aesCBC) Decrypt(ciphertext []byte) (string, error) {
+func (a *helper) Decrypt(ciphertext []byte) (string, error) {
 	block, err := a.GetBlock(a.KeyBytes)
 	if err != nil {
 		return "", err
@@ -152,13 +152,13 @@ func (a *aesCBC) Decrypt(ciphertext []byte) (string, error) {
 	return string(a.removePKCSPadding(_dst[a.Size():])), nil
 }
 
-func (a *aesCBC) pkcS5Padding(ciphertext []byte, blockSize int) []byte {
+func (a *helper) pkcS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
 
-func (a *aesCBC) removePKCSPadding(_dst []byte) []byte {
+func (a *helper) removePKCSPadding(_dst []byte) []byte {
 	result := []byte{}
 	for _, char := range _dst {
 		if char < 16 {

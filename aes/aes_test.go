@@ -53,7 +53,7 @@ func (m *kbmock) InitializationVector(ciphertext []byte) ([]byte, error) {
 func Test_Key_blockSize(t *testing.T) {
 	mock := kbmock{}
 	mock.On("Size").Return(8)
-	aesObj := &aesStream{EsInterfacer: &mock, Text: "text"}
+	aesObj := &streamHelper{EsInterfacer: &mock, Text: "text"}
 	res := aesObj.Size()
 	assert.Equal(t, res, 8)
 	//Not required, as sure that size will be called..
@@ -70,7 +70,7 @@ func Test_Key_block_failure(t *testing.T) {
 	_mock.On("InitializationVector", []byte("hello")).
 		Return([]byte(""), errors.New("IV failed"))
 
-	aesObj := &aesStream{EsInterfacer: &_mock, Text: "This is very secrect text.."}
+	aesObj := &streamHelper{EsInterfacer: &_mock, Text: "This is very secrect text.."}
 	_, err := aesObj.Encrypt()
 	assert.Error(t, err, "expecting an error.")
 	// _mock.AssertExpectations(t)
@@ -84,7 +84,7 @@ func Test_Aes(t *testing.T) {
 		{"my secrect"},
 	}
 	for _, test := range tests {
-		_tempa := NewAesCBC(test.test)
+		_tempa := Newhelper(test.test)
 		_t, err := _tempa.Encrypt()
 		assert.Equal(t, err, nil)
 		res, _ := _tempa.Decrypt(_t)
@@ -101,7 +101,7 @@ func Test_Aesstream(t *testing.T) {
 		{"vimlesh secretc"},
 	}
 	for _, test := range tests {
-		_tempa := NewAesStream(test.test)
+		_tempa := NewstreamHelper(test.test)
 		_t, err := _tempa.Encrypt()
 		assert.Equal(t, err, nil)
 		res, _ := _tempa.Decrypt(_t)

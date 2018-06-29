@@ -32,46 +32,78 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
+	"encoding/pem"
 	"fmt"
 	"io"
-	"log"
 
-	vaes "github.com/VimleshS/crypto/aes"
-	vdes "github.com/VimleshS/crypto/des"
-)
+	vrsa "github.com/VimleshS/crypto/rsa"
+	/*
+		vaes "github.com/VimleshS/crypto/aes"
+		vdes "github.com/VimleshS/crypto/des"
+	*/)
 
 func main() {
+	/*
+		a1 := vaes.NewAesStream("This is my new text")
+		cp1, err := a1.Encrypt()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		v1, _ := a1.Decrypt(cp1)
+		fmt.Println(v1)
 
-	a1 := vaes.NewAesStream("This is my new text")
-	cp1, err := a1.Encrypt()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	v1, _ := a1.Decrypt(cp1)
-	fmt.Println(v1)
+		a := vaes.NewAesCBC("This is my")
+		cp, err := a.Encrypt()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		v1, _ = a.Decrypt(cp)
+		fmt.Println(v1)
 
-	a := vaes.NewAesCBC("This is my")
-	cp, err := a.Encrypt()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	v1, _ = a.Decrypt(cp)
-	fmt.Println(v1)
+		ae := vaes.NewAesStream("woh im greatmnvhsahg 123456")
+		ct, _ := ae.Encrypt()
+		v, _ := ae.Decrypt(ct)
+		fmt.Println(v)
 
-	ae := vaes.NewAesStream("woh im greatmnvhsahg 123456")
-	ct, _ := ae.Encrypt()
-	v, _ := ae.Decrypt(ct)
-	fmt.Println(v)
-
-	_des := vdes.NewDesCBC("你好")
-	ct, _ = _des.Encrypt()
-	s, _ := _des.Decrypt(ct)
-	fmt.Println(s)
-
-	// testDes()
+		_des := vdes.NewDesCBC("你好")
+		ct, _ = _des.Encrypt()
+		s, _ := _des.Decrypt(ct)
+		fmt.Println(s)
+	*/
 	// testdsa()
 	// testonlyRSA()
-	//testRSA()
+
+	h := vrsa.Helper{PrivateKey: "./private_key.pem",
+		PublicKey: "./public_key.der",
+	}
+	b, e := h.Encrypt([]byte("Vimlesh is grt"))
+	if e != nil {
+		panic(e)
+	}
+
+	s, e := h.Decrypt(b)
+	if e != nil {
+		panic(e.Error())
+	}
+
+	fmt.Println(s)
+
+	RsaPem := vrsa.Helper{PrivateKey: "./private_key.pem",
+		PublicKey: "./public_key.pem",
+		DecodeFn:  pem.Decode,
+	}
+	b, e = RsaPem.Encrypt([]byte("decode via a pem decoding..."))
+	if e != nil {
+		panic(e)
+	}
+
+	s, e = RsaPem.Decrypt(b)
+	if e != nil {
+		panic(e.Error())
+	}
+
+	fmt.Println(s)
+
 	// gen_from_file()
 }
 
