@@ -7,12 +7,30 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"io"
-	"log"
 )
+
+type SizeKeyBlock interface {
+	Size() int
+	KeyBytes() []byte
+	GetBlock(fn func() []byte) (cipher.Block, error)
+}
+
+type Vectorizer interface {
+	InitializationVector(ciphertext []byte) ([]byte, error)
+}
+
+type EsInterfacer interface {
+	SizeKeyBlock
+	Vectorizer
+}
 
 type KeyBlock struct {
 	BlockSize int
 	NewCipher func(key []byte) (cipher.Block, error)
+}
+
+func (kb *KeyBlock) Size() int {
+	return kb.BlockSize
 }
 
 func (kb *KeyBlock) KeyBytes() []byte {
@@ -31,7 +49,6 @@ func (kb *KeyBlock) GetBlock(fn func() []byte) (cipher.Block, error) {
 func (kb *KeyBlock) InitializationVector(ciphertext []byte) ([]byte, error) {
 	iv := ciphertext[:kb.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
 	return iv, nil
@@ -39,14 +56,15 @@ func (kb *KeyBlock) InitializationVector(ciphertext []byte) ([]byte, error) {
 
 // Aesstream ...
 type aesStream struct {
-	KeyBlock
+	EsInterfacer
 	Text string
 }
 
 // NewAesStream ...
 func NewAesStream(text string) *aesStream {
-	return &aesStream{KeyBlock: KeyBlock{
-		NewCipher: aes.NewCipher, BlockSize: aes.BlockSize}, Text: text}
+	return &aesStream{EsInterfacer: &KeyBlock{
+		NewCipher: aes.NewCipher, BlockSize: aes.BlockSize},
+		Text: text}
 }
 
 // Encrypt ...
@@ -55,19 +73,17 @@ func (a *aesStream) Encrypt() ([]byte, error) {
 
 	block, err := a.GetBlock(a.KeyBytes)
 	if err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
 
-	ciphertext := make([]byte, a.BlockSize+len(paddedSrcBytes))
+	ciphertext := make([]byte, a.Size()+len(paddedSrcBytes))
 	iv, err := a.InitializationVector(ciphertext)
 	if err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
 
 	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[a.BlockSize:], paddedSrcBytes)
+	stream.XORKeyStream(ciphertext[a.Size():], paddedSrcBytes)
 	return ciphertext, nil
 }
 
@@ -75,29 +91,27 @@ func (a *aesStream) Encrypt() ([]byte, error) {
 func (a *aesStream) Decrypt(ciphertext []byte) (string, error) {
 	block, err := a.GetBlock(a.KeyBytes)
 	if err != nil {
-		log.Println(err.Error())
 		return "", err
 	}
 
 	iv := make([]byte, 16)
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		log.Println(err.Error())
 		return "", err
 	}
 
 	decryptor := cipher.NewCFBDecrypter(block, iv)
 	_dst := make([]byte, len(ciphertext))
 	decryptor.XORKeyStream(_dst, ciphertext)
-	return string(_dst[a.BlockSize:]), nil
+	return string(_dst[a.Size():]), nil
 }
 
 type aesCBC struct {
-	KeyBlock
+	EsInterfacer
 	Text string
 }
 
 func NewAesCBC(text string) *aesCBC {
-	return &aesCBC{KeyBlock: KeyBlock{
+	return &aesCBC{EsInterfacer: &KeyBlock{
 		NewCipher: aes.NewCipher, BlockSize: aes.BlockSize}, Text: text}
 }
 
@@ -107,21 +121,19 @@ func (a *aesCBC) Encrypt() ([]byte, error) {
 
 	block, err := a.GetBlock(a.KeyBytes)
 	if err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
 
-	paddedSrcBytes = a.pkcS5Padding(paddedSrcBytes, a.BlockSize)
+	paddedSrcBytes = a.pkcS5Padding(paddedSrcBytes, a.Size())
 
-	ciphertext := make([]byte, a.BlockSize+len(paddedSrcBytes))
+	ciphertext := make([]byte, a.Size()+len(paddedSrcBytes))
 	iv, err := a.InitializationVector(ciphertext)
 	if err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
 
 	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[a.BlockSize:], paddedSrcBytes)
+	mode.CryptBlocks(ciphertext[a.Size():], paddedSrcBytes)
 	return ciphertext, nil
 }
 
@@ -129,16 +141,15 @@ func (a *aesCBC) Encrypt() ([]byte, error) {
 func (a *aesCBC) Decrypt(ciphertext []byte) (string, error) {
 	block, err := a.GetBlock(a.KeyBytes)
 	if err != nil {
-		log.Println(err.Error())
 		return "", err
 	}
 
-	iv := ciphertext[:a.BlockSize]
+	iv := ciphertext[:a.Size()]
 	dec := cipher.NewCBCDecrypter(block, iv)
 	_dst := make([]byte, len(ciphertext))
 	dec.CryptBlocks(_dst, ciphertext)
 
-	return string(a.removePKCSPadding(_dst[a.BlockSize:])), nil
+	return string(a.removePKCSPadding(_dst[a.Size():])), nil
 }
 
 func (a *aesCBC) pkcS5Padding(ciphertext []byte, blockSize int) []byte {

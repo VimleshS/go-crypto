@@ -10,7 +10,7 @@ import (
 )
 
 type desCBC struct {
-	vaes.KeyBlock
+	vaes.EsInterfacer
 	Text string
 }
 
@@ -19,7 +19,9 @@ func (a *desCBC) KeyBytes() []byte {
 }
 
 func NewDesCBC(text string) *desCBC {
-	return &desCBC{KeyBlock: vaes.KeyBlock{NewCipher: des.NewCipher, BlockSize: des.BlockSize}, Text: text}
+	return &desCBC{EsInterfacer: &vaes.KeyBlock{
+		NewCipher: des.NewCipher, BlockSize: des.BlockSize},
+		Text: text}
 }
 
 // Encrypt ...
@@ -32,9 +34,9 @@ func (a *desCBC) Encrypt() ([]byte, error) {
 		return nil, err
 	}
 
-	paddedSrcBytes = a.pkcS5Padding(paddedSrcBytes, a.BlockSize)
+	paddedSrcBytes = a.pkcS5Padding(paddedSrcBytes, a.Size())
 
-	ciphertext := make([]byte, a.BlockSize+len(paddedSrcBytes))
+	ciphertext := make([]byte, a.Size()+len(paddedSrcBytes))
 	iv, err := a.InitializationVector(ciphertext)
 	if err != nil {
 		log.Println(err.Error())
@@ -42,7 +44,7 @@ func (a *desCBC) Encrypt() ([]byte, error) {
 	}
 
 	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[a.BlockSize:], paddedSrcBytes)
+	mode.CryptBlocks(ciphertext[a.Size():], paddedSrcBytes)
 	return ciphertext, nil
 }
 
@@ -54,12 +56,12 @@ func (a *desCBC) Decrypt(ciphertext []byte) (string, error) {
 		return "", err
 	}
 
-	iv := ciphertext[:a.BlockSize]
+	iv := ciphertext[:a.Size()]
 	dec := cipher.NewCBCDecrypter(block, iv)
 	_dst := make([]byte, len(ciphertext))
 	dec.CryptBlocks(_dst, ciphertext)
 
-	return string(a.removePKCSPadding(_dst[a.BlockSize:])), nil
+	return string(a.removePKCSPadding(_dst[a.Size():])), nil
 }
 
 func (a *desCBC) pkcS5Padding(ciphertext []byte, blockSize int) []byte {
