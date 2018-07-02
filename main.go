@@ -35,6 +35,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"os"
 
 	vrsa "github.com/VimleshS/crypto/rsa"
 	/*
@@ -70,7 +71,8 @@ func main() {
 		s, _ := _des.Decrypt(ct)
 		fmt.Println(s)
 	*/
-	// testdsa()
+	testdsa()
+	os.Exit(-1)
 	// testonlyRSA()
 
 	h := vrsa.Helper{PrivateKey: "./private_key.pem",

@@ -28,8 +28,8 @@ func Test_Helper_DecodeFn_NotNil(t *testing.T) {
 func Test_Helper_KeyFiles(t *testing.T) {
 	dir, _ := os.Getwd()
 
-	_t := Helper{PrivateKey: dir + "/../private_key.pem",
-		PublicKey: dir + "/../public_key.pem",
+	_t := Helper{PrivateKey: dir + "/../keys/private_key.pem",
+		PublicKey: dir + "/../keys/public_key.pem",
 	}
 	_, err := _t.readPublicKey()
 	assert.Nilf(t, err, "There should not be an errror")
@@ -38,8 +38,8 @@ func Test_Helper_KeyFiles(t *testing.T) {
 func Test_Helper_encrpyt_decrypt(t *testing.T) {
 	dir, _ := os.Getwd()
 
-	_t := Helper{PrivateKey: dir + "/../private_key.pem",
-		PublicKey: dir + "/../public_key.pem",
+	_t := Helper{PrivateKey: dir + "/../keys/private_key.pem",
+		PublicKey: dir + "/../keys/public_key.pem",
 		DecodeFn:  pem.Decode,
 	}
 	data := "decode via a pem decoding..."
